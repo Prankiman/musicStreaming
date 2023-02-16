@@ -1,8 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-void main() => runApp(MyApp());
+Future<void> main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(MyApp());
+}
+
+void writeData(data) async {
+  FirebaseDatabase database = FirebaseDatabase.instance;
+
+  DatabaseReference ref = FirebaseDatabase.instance.ref("users/123");
+
+  await ref.update({
+    "age": data,
+  });
+  print(data);
+}
 
 class MyApp extends StatefulWidget {
   @override
@@ -11,6 +29,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _textController = TextEditingController();
+  final TextEditingController textController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +49,21 @@ class _MyAppState extends State<MyApp> {
             children: [
               SizedBox(height: 20),
               TextField(
-                controller: _textController,
+                controller: textController,
                 decoration: InputDecoration(
                   hintText: 'Enter some text',
                 ),
               ),
+              TextButton(
+                style: ButtonStyle(
+                  foregroundColor:
+                      MaterialStateProperty.all<Color>(Colors.blue),
+                ),
+                onPressed: () {
+                  writeData(textController.text);
+                },
+                child: Text('Write data'),
+              )
             ],
           ),
         ),
