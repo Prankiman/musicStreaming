@@ -22,10 +22,12 @@ void writeData(data) async {
   await ref.update({
     "age": data,
   });
-  print(data);
+  debugPrint(data);
 }
 
 class MyDropdownButton extends StatefulWidget {
+  const MyDropdownButton({super.key});
+
   @override
   _MyDropdownButtonState createState() => _MyDropdownButtonState();
 }
@@ -76,6 +78,7 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                     setState(() {
                       _selectedStation = newValue;
                     });
+                    writeData(newValue);
                   },
                 ),
               ),
