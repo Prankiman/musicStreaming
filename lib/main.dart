@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-void main() {
-  debugPrint("starting app");
+Future<void> main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(MaterialApp(
     title: "My Flutter App",
     home: MyDropdownButton(),
   ));
+}
+
+void writeData(data) async {
+  FirebaseDatabase database = FirebaseDatabase.instance;
+
+  DatabaseReference ref = FirebaseDatabase.instance.ref("users/123");
+
+  await ref.update({
+    "age": data,
+  });
+  print(data);
 }
 
 class MyDropdownButton extends StatefulWidget {
