@@ -3,27 +3,53 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+List<String> stations = [];
+
 Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(MaterialApp(
+  getStations();
+  runApp(const MaterialApp(
     title: "My Flutter App",
     home: MyDropdownButton(),
   ));
+
 }
+// Future<void> getSelectedStation() async{
+//   final ref = FirebaseDatabase.instance.ref("currentStation");
+//   final snapshot = await ref.get();
+//   if (snapshot.exists) {
+//     selectedStation =  snapshot.value.toString();
+//     print(selectedStation);
+//   } else {
+//     print('No data available.');
+//   }
+// }
+void changeStation(data) async {
 
-void writeData(data) async {
-  FirebaseDatabase database = FirebaseDatabase.instance;
+  DatabaseReference ref = FirebaseDatabase.instance.ref("/");
 
-  DatabaseReference ref = FirebaseDatabase.instance.ref("users/123");
-
-  await ref.update({
-    "age": data,
-  });
+  await ref.update({"currentStation": data});
   debugPrint(data);
 }
+
+void getStations() async{
+  DatabaseReference stationsRef =
+  FirebaseDatabase.instance.ref('stations');
+  stationsRef.onValue.listen((DatabaseEvent event) {
+    final data = event.snapshot.children;
+    for (DataSnapshot s in data){
+      stations.add(s.key.toString());
+    }
+
+    // for(var i=0; i<stations.length; i++){
+    //   print(stations[i]);
+    // }
+  });
+}
+
 
 class MyDropdownButton extends StatefulWidget {
   const MyDropdownButton({super.key});
@@ -34,33 +60,32 @@ class MyDropdownButton extends StatefulWidget {
 
 class _MyDropdownButtonState extends State<MyDropdownButton> {
   String? _selectedStation = "station1";
-  final List<String> _stations = ["station1", "station2", "station3"];
+  final List<String> _stations = stations;
   final isHovering = ValueNotifier(false);
   ValueNotifier<bool> isPlaying = ValueNotifier<bool>(false);
 
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context)  {
     // Get the screen width
     double screenWidth = MediaQuery.of(context).size.width;
-
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black38,
-        title: Text("Music streaming"),
+        title: const Text("Music streaming"),
       ),
       body: Material(
         color: Colors.black,
         child: Stack(
           children: [
             Center(
-              child: Container(
-                width: screenWidth * 0.7,
+              child:  SizedBox(
+                width: screenWidth * 0.3,
                 child: DropdownButton<String>(
                   value: _selectedStation,
                   dropdownColor: Colors.white,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                   ),
                   items: _stations.map((String station) {
@@ -68,7 +93,7 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                       value: station,
                       child: Text(
                         station,
-                        style: TextStyle(
+                        style: const  TextStyle(
                           color: Colors.amber,
                         ),
                       ),
@@ -78,7 +103,7 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                     setState(() {
                       _selectedStation = newValue;
                     });
-                    writeData(newValue);
+                    changeStation(newValue);
                   },
                 ),
               ),
@@ -102,10 +127,10 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                         child: InkWell(
                           onHover: (isHovering) {
                             this.isHovering.value = isHovering;
-                            debugPrint("hover");
+                            //debugPrint("hover");
                           },
                           onTap: () {
-                            debugPrint("tapped");
+                            //debugPrint("tapped");
                             isPlaying.value = !isPlaying.value;
                             debugPrint("$isPlaying");
                           },
