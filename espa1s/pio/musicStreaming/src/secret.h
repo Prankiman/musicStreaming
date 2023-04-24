@@ -1,0 +1,6 @@
+#define WIFI_SSID "Ribbit"
+#define WIFI_PASSWORD "bosseBUSS1#"
+#define DATABASE_URL "https://musicstreaming-84767-default-rtdb.firebaseio.com"
+#define API_KEY "AIzaSyAw0YInbILQLcaVuL-YTQecv9FrJZr6i_o"
+#define USER_PASSWORD ""
+#define USER_EMAIL ""

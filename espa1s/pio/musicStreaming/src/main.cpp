@@ -24,9 +24,9 @@
 
 #include "Audio.h"
 
-#define i2s_bit_clock_pin 14
-#define i2s_word_select_pin 15 // word select or left-right clock
-#define i2s_data_out_pin 22
+#define i2s_bit_clock_pin 14   // -1, 6, 26
+#define i2s_word_select_pin 15 // -1, 7, 27 | word select or left-right clock
+#define i2s_data_out_pin 22    // -1, 8, 28
 
 Audio audio;
 
@@ -72,7 +72,7 @@ void setup()
   //----------------------------AUDIO----STUFF---------------------------------
   audio.setPinout(i2s_bit_clock_pin, i2s_word_select_pin, i2s_data_out_pin);
 
-  audio.setVolume(20);
+  audio.setVolume(21);
 
   audio.connecttohost(radio_station_url.c_str());
   //-------------------------------------------------------------
@@ -81,6 +81,4 @@ void setup()
 void loop()
 {
   audio.loop();
-
-  //copy_url_stream.copy();
 }
