@@ -36,16 +36,6 @@ String name;
 
 FirebaseData fbdo;
 
-//====================================================
-// URLStream url(WIFI_SSID, WIFI_PASSWORD);
-
-// AudioKitStream decoded_stream;
-
-// EncodedAudioStream dec(&decoded_stream, new DecoderHelix()); // decoding stream to i2s format
-
-// StreamCopy copy_url_stream(dec, url); // copy url to decoder
-//==================================================
-
 void setup()
 {
   WiFi.disconnect();
@@ -86,31 +76,6 @@ void setup()
 
   audio.connecttohost(radio_station_url.c_str());
   //-------------------------------------------------------------
-
-  //===========================================================
-
-  // stream radio from url
-
-  // setup i2s stream
-  //audio_tools::AudioKitStreamConfig i2s_config = decoded_stream.defaultConfig(TX_MODE);
-
-  //i2s_config.pin_ws = ; // set word select value
-  //i2s_config.pin_bck = ; // set bit clock value
-  //i2s_config.pin_data = ; // set data line
-
-  //decoded_stream.begin(i2s_config);
-
-  //dec.setNotifyAudioChange(decoded_stream);
-  //dec.begin();
-
-  //url.begin(radio_station_url.c_str());
-
-  //url.begin("https://http-live.sr.se/p2musik-aac-192");
-
-  //url.begin("http://stream.live.vc.bbcmedia.co.uk/bbc_world_service");
-
-  //AudioLogger::instance().begin(Serial, AudioLogger::Info); // displaying audiodata to serial monitor
-  //==================================================================================
 }
 
 void loop()
