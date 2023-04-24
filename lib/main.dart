@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
+import './UI/play_button.dart';
+
+
+
 
 List<String> stations = [];
 
@@ -10,79 +14,113 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  getStations();
+  //getStations();
   runApp(const MaterialApp(
     title: "My Flutter App",
-    home: MyDropdownButton(),
+    debugShowCheckedModeBanner: false,
+    home: App(),
   ));
 
 }
-// Future<void> getSelectedStation() async{
-//   final ref = FirebaseDatabase.instance.ref("currentStation");
-//   final snapshot = await ref.get();
-//   if (snapshot.exists) {
-//     selectedStation =  snapshot.value.toString();
-//     print(selectedStation);
-//   } else {
-//     print('No data available.');
-//   }
-// }
-void changeStation(data) async {
-
-  DatabaseReference ref = FirebaseDatabase.instance.ref("/");
-
-  await ref.update({"currentStation": data});
-  debugPrint(data);
-}
-
-void getStations() async{
-  DatabaseReference stationsRef =
-  FirebaseDatabase.instance.ref('stations');
-  stationsRef.onValue.listen((DatabaseEvent event) {
-    final data = event.snapshot.children;
-    for (DataSnapshot s in data){
-      stations.add(s.key.toString());
-    }
-
-    // for(var i=0; i<stations.length; i++){
-    //   print(stations[i]);
-    // }
-  });
-}
 
 
-class MyDropdownButton extends StatefulWidget {
-  const MyDropdownButton({super.key});
+class App extends StatefulWidget {
+   const App({Key? key}) : super(key: key);
 
   @override
-  _MyDropdownButtonState createState() => _MyDropdownButtonState();
+  State<App> createState() => _AppState();
 }
 
-class _MyDropdownButtonState extends State<MyDropdownButton> {
+class _AppState extends State<App> {
+
+  int themeColorIndex = 0;
+  Color appBarColor = Colors.primaries[0].shade900;
+  Color bgColor = Colors.primaries[0].shade700;
+  Color btnColor = Colors.primaries[0].shade800;
+
   String? _selectedStation = "station1";
-  final List<String> _stations = stations;
-  final isHovering = ValueNotifier(false);
-  ValueNotifier<bool> isPlaying = ValueNotifier<bool>(false);
+  List<String> _stations = [];
 
+  void getStations() async{
+    DatabaseReference stationsRef =
+    FirebaseDatabase.instance.ref('stations');
+    stationsRef.onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.children;
+      List<String> st = [];
+      for (DataSnapshot s in data){
+        st.add(s.key.toString());
+      }
+
+      setState(() {
+        _stations = st;
+      });
+
+
+    });
+  }
+
+  void changeStation(data) async {
+
+    DatabaseReference ref = FirebaseDatabase.instance.ref("/");
+
+    await ref.update({"currentStation": data});
+    debugPrint(data);
+  }
 
   @override
-  Widget build(BuildContext context)  {
-    // Get the screen width
+  Widget build(BuildContext context) {
+    if(_stations.isEmpty){
+      getStations();
+    }
+    debugPrint("build");
     double screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black38,
-        title: const Text("Music streaming"),
+      appBar:  AppBar(
+        title: const Text("MusicStreaming"),
+        centerTitle: true,
+        backgroundColor:appBarColor ,
+        actions:  <Widget>[
+          IconButton(onPressed: (){
+
+            setState(() {
+              themeColorIndex++;
+              if(themeColorIndex >= Colors.primaries.length){themeColorIndex = 0;}
+
+              appBarColor = Colors.primaries[themeColorIndex].shade900;
+              bgColor = Colors.primaries[themeColorIndex].shade700;
+              Color btnColor = Colors.primaries[themeColorIndex].shade800;
+            });
+
+          }, icon: const Icon(Icons.change_circle)),
+
+        ],
       ),
-      body: Material(
-        color: Colors.black,
-        child: Stack(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) =>  SecondRoute(appBarColor: appBarColor, bgColor: bgColor,)),
+
+          );
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
+      ),
+
+      backgroundColor: bgColor,
+      body: Container(
+          alignment: Alignment.center,
+
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Center(
               child:  SizedBox(
                 width: screenWidth * 0.3,
                 child: DropdownButton<String>(
+                  isExpanded: true,
+                  borderRadius: BorderRadius.circular(8),
                   value: _selectedStation,
                   dropdownColor: Colors.white,
                   style: const TextStyle(
@@ -91,10 +129,13 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                   items: _stations.map((String station) {
                     return DropdownMenuItem<String>(
                       value: station,
-                      child: Text(
-                        station,
-                        style: const  TextStyle(
-                          color: Colors.amber,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Text(
+                          station,
+                          style: const  TextStyle(
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     );
@@ -108,47 +149,9 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
                 ),
               ),
             ),
-            Positioned(
-              bottom: 32,
-              left: (screenWidth * 0.5) - (screenWidth * 0.1) / 2,
-              child: ValueListenableBuilder(
-                valueListenable: isHovering,
-                builder: (context, value, child) {
-                  return ValueListenableBuilder(
-                    valueListenable: isPlaying,
-                    builder: (context, isPlayingValue, child) {
-                      return Container(
-                        width: screenWidth * 0.1,
-                        height: screenWidth * 0.1,
-                        decoration: BoxDecoration(
-                          color: value ? Colors.grey : Colors.white,
-                          borderRadius: BorderRadius.circular(screenWidth * 0.05),
-                        ),
-                        child: InkWell(
-                          onHover: (isHovering) {
-                            this.isHovering.value = isHovering;
-                            //debugPrint("hover");
-                          },
-                          onTap: () {
-                            //debugPrint("tapped");
-                            isPlaying.value = !isPlaying.value;
-                            debugPrint("$isPlaying");
-                          },
-                          child: IconButton(
-                            onPressed: null,
-                            icon: Icon(
-                              isPlayingValue ? Icons.pause : Icons.play_arrow_rounded,
-                              size: screenWidth * 0.05,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            )
+             Center(
+              child:  PlayButton()
+            ),
 
           ],
         ),
@@ -156,3 +159,114 @@ class _MyDropdownButtonState extends State<MyDropdownButton> {
     );
   }
 }
+
+class SecondRoute extends StatefulWidget {
+
+  SecondRoute({Key? key, required this.appBarColor, required this.bgColor}) : super(key: key);
+
+  final Color appBarColor;
+  final Color bgColor;
+  @override
+  State<SecondRoute> createState() => _SecondRouteState();
+}
+
+class _SecondRouteState extends State<SecondRoute> {
+
+  final _nameController = TextEditingController();
+  final _urlController = TextEditingController();/// create a TextEditingController instance
+  String _url = '';
+  String _stationName = ''; // initialize a variable to hold the text value
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _urlController.dispose();// dispose the TextEditingController instance
+    super.dispose();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    double screenWidth = MediaQuery.of(context).size.width;
+    return  Scaffold(
+      appBar: AppBar(
+        title: const Text('Add Station'),
+        centerTitle: true,
+        backgroundColor: widget.appBarColor,
+      ),
+      body: Container(
+        color: widget.bgColor,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: screenWidth/2,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: TextField(
+                    controller: _nameController, // set the TextEditingController instance
+                    onChanged: (value) {
+                      setState(() {
+                        _stationName = value;
+                      });
+                    },
+                    style: TextStyle(color: Colors.white),
+                    decoration:  InputDecoration(
+                      fillColor: widget.appBarColor,
+                      filled: true,
+                      border: UnderlineInputBorder(),
+                      labelText: 'Enter station name',
+                        labelStyle: TextStyle(color:Colors.white),
+                        focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white), // set the focused underline color
+                  ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: screenWidth/2,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: TextField(
+                    controller: _urlController, // set the TextEditingController instance
+                    onChanged: (value) {
+                      setState(() {
+                        _url = value;
+                        debugPrint(_url);
+                      });
+                    },
+                    style: TextStyle(color: Colors.white),
+                    decoration:  InputDecoration(
+                      fillColor: widget.appBarColor,
+                      filled: true,
+                      border: const UnderlineInputBorder(),
+                      labelText: 'Enter URL',
+                      labelStyle: TextStyle(color:Colors.white),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white), // set the focused underline color
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
+                ),
+                child: const Text('Add'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
