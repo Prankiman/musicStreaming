@@ -38,7 +38,7 @@ class _AppState extends State<App> {
   Color bgColor = Colors.primaries[0].shade700;
   Color btnColor = Colors.primaries[0].shade800;
 
-  String? _selectedStation = "station1";
+  String? _selectedStation = "NRJ";
   List<String> _stations = [];
 
   void getStations() async{
@@ -166,6 +166,12 @@ class SecondRoute extends StatefulWidget {
 
   final Color appBarColor;
   final Color bgColor;
+
+  void addStation(name, url) async {
+    DatabaseReference ref = FirebaseDatabase.instance.ref("/stations");
+
+    await ref.update({name: url});
+  }
   @override
   State<SecondRoute> createState() => _SecondRouteState();
 }
@@ -255,7 +261,20 @@ class _SecondRouteState extends State<SecondRoute> {
 
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  if(_url =='' || _stationName == '' ){
+                    final snackBar =  SnackBar(content: const Text("invalid input!"), backgroundColor: Colors.red.shade400, duration: const Duration(milliseconds: 600),);
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }else{
+                    widget.addStation(_stationName, _url);
+                    Navigator.pop(context);
+                    final snackBar =  SnackBar(content:  Text("added $_stationName"), backgroundColor: Colors.green.shade400, duration: const Duration(milliseconds: 1000),);
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+                    _stationName = '';
+                    _url = '';
+                  }
+
+
                 },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all<Color>(Colors.green),
