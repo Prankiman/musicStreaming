@@ -10,6 +10,9 @@
 .svn/
 migrate_working_dir/
 
+# secret credentils
+secret.h
+
 # IntelliJ related
 *.iml
 *.ipr

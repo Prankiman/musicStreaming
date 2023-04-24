@@ -1,19 +1,16 @@
 //_________LIBRARIES____________________
 /*
-  https://github.com/pschatzmann/arduino-audio-tools
-
-  https://github.com/pschatzmann/arduino-audiokit
+  https://github.com/schreibfaul1/ESP32-audioI2S
 
   https://github.com/mobizt/Firebase-ESP32
 */
 //__________________________________
 
-//#include <AudioKitHAL.h>
 #include <secret.h>
 
 #include <Arduino.h>
 
-#include <Wifi.h>
+#include <WiFi.h>
 
 #include <Wire.h>
 
@@ -21,53 +18,104 @@
 
 #include <base64.h>
 
-#include <AudioTools.h>
-
-#include <AudioCodecs/CodecMP3Helix.h>
-
-#include "AudioLibs/AudioKit.h"
-
 #include <FirebaseESP32.h>
 
-URLStream url(WIFI_SSID, WIFI_PASS);
-//I2SStream decoded_stream;
-AudioKitStream decoded_stream;
+#include <stdio.h>
 
-EncodedAudioStream dec(&decoded_stream, new MP3DecoderHelix()); // decoding stream to i2s format
-StreamCopy copy_url_stream(dec, url);                           // copy url to decoder
+#include "Audio.h"
+
+#define i2s_bit_clock_pin 14
+#define i2s_word_select_pin 15 // word select or left-right clock
+#define i2s_data_out_pin 22
+
+Audio audio;
+
+String radio_station_url;
+String current_station;
+String name;
+
+FirebaseData fbdo;
+
+//====================================================
+// URLStream url(WIFI_SSID, WIFI_PASSWORD);
+
+// AudioKitStream decoded_stream;
+
+// EncodedAudioStream dec(&decoded_stream, new DecoderHelix()); // decoding stream to i2s format
+
+// StreamCopy copy_url_stream(dec, url); // copy url to decoder
+//==================================================
 
 void setup()
 {
-  pinMode(2, OUTPUT);
+  WiFi.disconnect();
+
+  WiFi.mode(WIFI_STA);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.print('.');
+    delay(10);
+  }
+
+  Firebase.begin(DATABASE_URL, API_KEY);
+
   Serial.begin(115200); // set baud rate
 
   Serial.println("hmm");
 
-  AudioLogger::instance().begin(Serial, AudioLogger::Info); // displaying audiodata to serial monitor
+  name = Firebase.RTDB.get(&fbdo, ("/users/123/name")) ? fbdo.to<String>() : String("ajajaj");
 
-  // setup i2s stream
-  auto i2s_config = decoded_stream.defaultConfig(TX_MODE);
+  Serial.println(name);
 
-  //i2s_config.pin_ws = ; // set word select value
-  //i2s_config.pin_bck = ; // set bit clock value
-  //i2s_config.pin_data = 12; // set data line
+  current_station = Firebase.RTDB.get(&fbdo, ("/currentStation")) ? fbdo.to<String>() : String("ajajaj");
 
-  decoded_stream.begin(i2s_config);
+  Serial.println(current_station);
 
-  //dec.setNotifyAudioChange(decoded_stream);
-  dec.begin();
+  radio_station_url = Firebase.RTDB.get(&fbdo, (("/stations/" + current_station).c_str())) ? fbdo.to<String>() : String("ajajaj");
+
+  Serial.println(radio_station_url);
+  Serial.println(("/stations/" + current_station).c_str());
+
+  //----------------------------AUDIO----STUFF---------------------------------
+  audio.setPinout(i2s_bit_clock_pin, i2s_word_select_pin, i2s_data_out_pin);
+
+  audio.setVolume(20);
+
+  audio.connecttohost(radio_station_url.c_str());
+  //-------------------------------------------------------------
+
+  //===========================================================
 
   // stream radio from url
 
-  //url.begin("https://http-live.sr.se/p3-aac-192");
-  url.begin("https://stream.live.vc.bbcmedia.co.uk/bbc_world_service", "audio/mp3");
+  // setup i2s stream
+  //audio_tools::AudioKitStreamConfig i2s_config = decoded_stream.defaultConfig(TX_MODE);
+
+  //i2s_config.pin_ws = ; // set word select value
+  //i2s_config.pin_bck = ; // set bit clock value
+  //i2s_config.pin_data = ; // set data line
+
+  //decoded_stream.begin(i2s_config);
+
+  //dec.setNotifyAudioChange(decoded_stream);
+  //dec.begin();
+
+  //url.begin(radio_station_url.c_str());
+
+  //url.begin("https://http-live.sr.se/p2musik-aac-192");
+
+  //url.begin("http://stream.live.vc.bbcmedia.co.uk/bbc_world_service");
+
+  //AudioLogger::instance().begin(Serial, AudioLogger::Info); // displaying audiodata to serial monitor
+  //==================================================================================
 }
 
 void loop()
 {
-  digitalWrite(2, HIGH); // turn the LED on (HIGH is the voltage level)
-  //delay(1000);           // wait for a second
-  digitalWrite(2, LOW);
-  Serial.println("hum");
-  copy_url_stream.copy();
+  audio.loop();
+
+  //copy_url_stream.copy();
 }
